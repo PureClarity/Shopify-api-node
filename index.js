@@ -1,16 +1,14 @@
 'use strict';
 
-const camelCase = require('lodash/camelCase');
 const transform = require('lodash/transform');
 const defaults = require('lodash/defaults');
-const assign = require('lodash/assign');
 const EventEmitter = require('events');
 const stopcock = require('stopcock');
-const path = require('path');
 const got = require('got');
-const fs = require('fs');
+const url = require('url');
 
 const pkg = require('./package');
+const resources = require('./resources');
 
 /**
  * Creates a Shopify instance.
@@ -20,6 +18,9 @@ const pkg = require('./package');
  * @param {String} options.apiKey The API Key
  * @param {String} options.password The private app password
  * @param {String} options.accessToken The persistent OAuth public app token
+ * @param {String} [options.apiVersion] The Shopify API version to use
+ * @param {Boolean} [options.presentmentPrices] Whether to include the header to
+ *     pull presentment prices for products
  * @param {Boolean|Object} [options.autoLimit] Limits the request rate
  * @param {Number} [options.timeout] The request timeout
  * @constructor
@@ -30,8 +31,8 @@ function Shopify(options) {
   if (
     !options ||
     !options.shopName ||
-    !options.accessToken && (!options.apiKey || !options.password) ||
-    options.accessToken && (options.apiKey || options.password)
+    (!options.accessToken && (!options.apiKey || !options.password)) ||
+    (options.accessToken && (options.apiKey || options.password))
   ) {
     throw new Error('Missing or invalid options');
   }
@@ -47,20 +48,33 @@ function Shopify(options) {
     current: undefined,
     max: undefined
   };
+  this.callGraphqlLimits = {
+    remaining: undefined,
+    current: undefined,
+    max: undefined
+  };
 
   this.baseUrl = {
-    auth: !options.accessToken && `${options.apiKey}:${options.password}`,
     hostname: !options.shopName.endsWith('.myshopify.com')
       ? `${options.shopName}.myshopify.com`
       : options.shopName,
     protocol: 'https:'
   };
 
+  if (!options.accessToken) {
+    this.baseUrl.username = options.apiKey;
+    this.baseUrl.password = options.password;
+  }
+
   if (options.autoLimit) {
-    const conf = transform(options.autoLimit, (result, value, key) => {
-      if (key === 'calls') key = 'limit';
-      result[key] = value;
-    }, { bucketSize: 35 });
+    const conf = transform(
+      options.autoLimit,
+      (result, value, key) => {
+        if (key === 'calls') key = 'limit';
+        result[key] = value;
+      },
+      { bucketSize: 35 }
+    );
 
     this.request = stopcock(this.request, conf);
   }
@@ -90,67 +104,193 @@ Shopify.prototype.updateLimits = function updateLimits(header) {
 /**
  * Sends a request to a Shopify API endpoint.
  *
- * @param {Object} url URL object
+ * @param {Object} uri URL object
  * @param {String} method HTTP method
- * @param {String} [key] Key name to use for req/res body
- * @param {Object} [params] Request body
+ * @param {(String|undefined)} key Key name to use for req/res body
+ * @param {(Object|undefined)} data Request body
+ * @param {(Object|undefined)} headers Extra headers
  * @return {Promise}
  * @private
  */
-Shopify.prototype.request = function request(url, method, key, params) {
-  const options = assign({
-    headers: { 'User-Agent': `${pkg.name}/${pkg.version}` },
+Shopify.prototype.request = function request(uri, method, key, data, headers) {
+  const options = {
+    headers: { 'User-Agent': `${pkg.name}/${pkg.version}`, ...headers },
     timeout: this.options.timeout,
-    json: true,
-    retries: 0,
+    responseType: 'json',
+    retry: 0,
     method
-  }, url);
+  };
 
   if (this.options.accessToken) {
     options.headers['X-Shopify-Access-Token'] = this.options.accessToken;
   }
 
-  if (params) {
-    const body = key ? { [key]: params } : params;
-
-    options.headers['Content-Type'] = 'application/json';
-    options.body = body;
+  if (data) {
+    options.json = key ? { [key]: data } : data;
   }
 
-  return got(options).then(res => {
-    const body = res.body;
+  return got(uri, options).then(
+    (res) => {
+      const body = res.body;
 
-    this.updateLimits(res.headers['x-shopify-shop-api-call-limit']);
+      this.updateLimits(res.headers['x-shopify-shop-api-call-limit']);
 
-    if (key) return body[key];
-    return body || {};
-  }, err => {
-    this.updateLimits(
-      err.response && err.response.headers['x-shopify-shop-api-call-limit']
-    );
+      if (res.statusCode === 202) {
+        const retryAfter = res.headers['retry-after'] * 1000 || 0;
+        const { pathname, search } = url.parse(res.headers['location']);
 
-    return Promise.reject(err);
+        return delay(retryAfter).then(() => {
+          const uri = { pathname, ...this.baseUrl };
+
+          if (search) uri.search = search;
+
+          return this.request(uri, 'GET', key);
+        });
+      }
+
+      const data = key ? body[key] : body || {};
+
+      if (res.headers.link) {
+        const link = parseLinkHeader(res.headers.link);
+
+        if (link.next) {
+          Object.defineProperties(data, {
+            nextPageParameters: { value: link.next.query }
+          });
+        }
+
+        if (link.previous) {
+          Object.defineProperties(data, {
+            previousPageParameters: { value: link.previous.query }
+          });
+        }
+      }
+
+      return data;
+    },
+    (err) => {
+      this.updateLimits(
+        err.response && err.response.headers['x-shopify-shop-api-call-limit']
+      );
+
+      return Promise.reject(err);
+    }
+  );
+};
+
+/**
+ * Updates GraphQL API call limits.
+ *
+ * @param {String} throttle The status returned in the GraphQL response
+ * @private
+ */
+Shopify.prototype.updateGraphqlLimits = function updateGraphqlLimits(throttle) {
+  const limits = this.callGraphqlLimits;
+
+  limits.remaining = throttle.currentlyAvailable;
+  limits.current = throttle.maximumAvailable - throttle.currentlyAvailable;
+  limits.max = throttle.maximumAvailable;
+
+  this.emit('callGraphqlLimits', limits);
+};
+
+/**
+ * Sends a request to the Shopify GraphQL API endpoint.
+ *
+ * @param {String} [data] Request body
+ * @return {Promise}
+ * @public
+ */
+Shopify.prototype.graphql = function graphql(data, variables) {
+  let pathname = '/admin/api';
+
+  if (this.options.apiVersion) {
+    pathname += `/${this.options.apiVersion}`;
+  }
+
+  pathname += '/graphql.json';
+
+  const uri = { pathname, ...this.baseUrl };
+  const json = variables !== undefined && variables !== null;
+  const options = {
+    headers: {
+      'User-Agent': `${pkg.name}/${pkg.version}`,
+      'Content-Type': json ? 'application/json' : 'application/graphql'
+    },
+    timeout: this.options.timeout,
+    responseType: 'json',
+    retry: 0,
+    method: 'POST',
+    body: json ? JSON.stringify({ query: data, variables }) : data
+  };
+
+  if (this.options.accessToken) {
+    options.headers['X-Shopify-Access-Token'] = this.options.accessToken;
+  }
+
+  return got(uri, options).then((res) => {
+    if (res.body.extensions && res.body.extensions.cost) {
+      this.updateGraphqlLimits(res.body.extensions.cost.throttleStatus);
+    }
+
+    if (res.body.errors) {
+      const first = res.body.errors[0];
+      const err = new Error(first.message);
+
+      err.locations = first.locations;
+      err.path = first.path;
+      err.extensions = first.extensions;
+      err.response = res;
+
+      throw err;
+    }
+
+    return res.body.data || {};
   });
 };
 
-//
-// Require and instantiate the resources lazily.
-//
-fs.readdirSync(path.join(__dirname, 'resources')).forEach(name => {
-  const prop = camelCase(name.slice(0, -3));
+resources.registerAll(Shopify);
 
-  Object.defineProperty(Shopify.prototype, prop, {
-    get: function get() {
-      const resource = require(`./resources/${name}`);
+/**
+ * Returns a promise that resolves after a given amount of time.
+ *
+ * @param {Number} ms Amount of milliseconds to wait
+ * @return {Promise} Promise that resolves after `ms` milliseconds
+ * @private
+ */
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
-      return Object.defineProperty(this, prop, {
-        value: new resource(this)
-      })[prop];
-    },
-    set: function set(value) {
-      return Object.defineProperty(this, prop, { value })[prop];
-    }
-  });
-});
+/**
+ * Parses the `Link` header into an object.
+ *
+ * @param {String} header The field value of the header
+ * @return {Object} The parsed header
+ * @private
+ */
+function parseLinkHeader(header) {
+  return header.split(',').reduce(reducer, {});
+}
+
+/**
+ * The callback function for `Array.prototype.reduce()` used by
+ * `parseLinkHeader()`.
+ *
+ * @param {Array} acc The accumulator
+ * @param {Object} cur The current element being processed in the array
+ * @return {Object} The accumulator
+ * @private
+ */
+function reducer(acc, cur) {
+  const pieces = cur.trim().split(';');
+  const link = url.parse(pieces[0].trim().slice(1, -1), true);
+  const rel = pieces[1].trim().slice(4);
+
+  if (rel === '"next"') acc.next = link;
+  else acc.previous = link;
+
+  return acc;
+}
 
 module.exports = Shopify;

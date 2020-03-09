@@ -19,10 +19,7 @@ function RecurringApplicationCharge(shopify) {
   this.key = 'recurring_application_charge';
 }
 
-assign(RecurringApplicationCharge.prototype, omit(base, [
-  'count',
-  'update'
-]));
+assign(RecurringApplicationCharge.prototype, omit(base, ['count', 'update']));
 
 /**
  * Activates a recurring application charge.
@@ -34,8 +31,25 @@ assign(RecurringApplicationCharge.prototype, omit(base, [
  */
 RecurringApplicationCharge.prototype.activate = function activate(id, params) {
   const url = this.buildUrl(`${id}/activate`);
-  return this.shopify.request(url, 'POST', undefined, { [this.key]: params })
-    .then(body => body[this.key]);
+  return this.shopify
+    .request(url, 'POST', undefined, { [this.key]: params })
+    .then((body) => body[this.key]);
+};
+
+/**
+ * Customize a recurring application charge.
+ *
+ * @param {Number} id Recurring application charge ID
+ * @param {Object} params Customization parameters
+ * @return {Promise} Promise that resolves with the result
+ * @public
+ */
+RecurringApplicationCharge.prototype.customize = function customize(
+  id,
+  params
+) {
+  const url = this.buildUrl(`${id}/customize`, { [this.key]: params });
+  return this.shopify.request(url, 'PUT', this.key);
 };
 
 /**
