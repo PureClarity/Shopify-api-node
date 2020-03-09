@@ -123,9 +123,8 @@ describe('Shopify#recurringApplicationCharge', () => {
       })
       .reply(200, output);
 
-    return resource.customize(id, { capped_amount: 200 })
-      .then(data => {
-        expect(data).to.deep.equal(output.recurring_application_charge);
-      });
+    return resource.customize(id, { capped_amount: 200 }).then((data) => {
+      expect(data).to.deep.equal(output.recurring_application_charge);
+    });
   });
 });

@@ -60,7 +60,10 @@ RecurringApplicationCharge.prototype.customize = function customize(
  * @return {Promise} Promise that resolves with the result
  * @public
  */
-RecurringApplicationCharge.prototype.customize = function customize(id, params) {
+RecurringApplicationCharge.prototype.customize = function customize(
+  id,
+  params
+) {
   const url = this.buildUrl(`${id}/customize`, {
     recurring_application_charge: params
   });
