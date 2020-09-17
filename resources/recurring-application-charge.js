@@ -51,6 +51,4 @@ RecurringApplicationCharge.prototype.customize = function customize(id, params) 
   return this.shopify.request(url, 'PUT', this.key);
 };
 
-};
-
 module.exports = RecurringApplicationCharge;
