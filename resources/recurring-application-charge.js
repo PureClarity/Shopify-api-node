@@ -47,10 +47,10 @@ RecurringApplicationCharge.prototype.activate = function activate(id, params) {
  * @public
  */
 RecurringApplicationCharge.prototype.customize = function customize(id, params) {
-  const url = this.buildUrl(`${id}/customize`, {
-    recurring_application_charge: params
-  });
+  const url = this.buildUrl(`${id}/customize`, { [this.key]: params });
   return this.shopify.request(url, 'PUT', this.key);
+};
+
 };
 
 module.exports = RecurringApplicationCharge;
