@@ -22,14 +22,13 @@
 export = Shopify;
 
 /*~ Write your module's methods and properties in this class */
-type onCallLimitsFn = (limits: Shopify.ICallLimits) => void;
 
 declare class Shopify {
   constructor(
     config: Shopify.IPublicShopifyConfig | Shopify.IPrivateShopifyConfig
   );
   callLimits: Shopify.ICallLimits;
-  callGraphqlLimits: Shopify.ICallLimits;
+  callGraphqlLimits: Shopify.ICallGraphqlLimits;
   accessScope: {
     list: () => Promise<Shopify.IAccessScope[]>;
   };
@@ -43,7 +42,9 @@ declare class Shopify {
       params: Shopify.ICreateApplicationCharge
     ) => Promise<Shopify.IApplicationCharge>;
     get: (id: number, params?: any) => Promise<Shopify.IApplicationCharge>;
-    list: (params?: any) => Promise<Shopify.IApplicationCharge[]>;
+    list: (
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.IApplicationCharge>>;
   };
   applicationCredit: {
     create: (
@@ -65,7 +66,10 @@ declare class Shopify {
       id: number,
       params?: any
     ) => Promise<Shopify.IArticle>;
-    list: (blogId: number, params?: any) => Promise<Shopify.IArticle[]>;
+    list: (
+      blogId: number,
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.IArticle>>;
     tags: (blogId?: number, params?: any) => Promise<string[]>;
     update: (
       blogId: number,
@@ -85,15 +89,31 @@ declare class Shopify {
   };
   balance: {
     list: () => Promise<Shopify.IBalance[]>;
-    transactions: () => Promise<Shopify.IBalanceTransaction[]>;
+    transactions: (
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.IBalanceTransaction>>;
   };
   blog: {
     count: () => Promise<number>;
     create: (params: Shopify.ICreateBlog) => Promise<Shopify.IBlog>;
     delete: (id: number) => Promise<void>;
     get: (id: number, params?: any) => Promise<Shopify.IBlog>;
-    list: (params?: any) => Promise<Shopify.IBlog[]>;
+    list: (params?: any) => Promise<Shopify.IPaginatedResult<Shopify.IBlog>>;
     update: (id: number, params: any) => Promise<Shopify.IBlog>;
+  };
+  cancellationRequest: {
+    create: (
+      fulfillmentOrderId: number,
+      message?: string
+    ) => Promise<Shopify.IFulfillmentOrder>;
+    accept: (
+      fulfillmentOrderId: number,
+      message?: string
+    ) => Promise<Shopify.IFulfillmentOrder>;
+    reject: (
+      fulfillmentOrderId: number,
+      message?: string
+    ) => Promise<Shopify.IFulfillmentOrder>;
   };
   carrierService: {
     create: (
@@ -112,7 +132,9 @@ declare class Shopify {
     count: (params?: any) => Promise<number>;
     create: (params?: any) => Promise<Shopify.ICheckout>;
     get: (token: string) => Promise<Shopify.ICheckout>;
-    list: (params?: any) => Promise<Shopify.ICheckout[]>;
+    list: (
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.ICheckout>>;
     shippingRates: (token: string) => Promise<any>;
     update: (token: any, params: any) => Promise<Shopify.ICheckout>;
   };
@@ -121,7 +143,14 @@ declare class Shopify {
     create: (params: Shopify.ICreateCollect) => Promise<Shopify.ICollect>;
     delete: (id: number) => Promise<void>;
     get: (id: number, params?: any) => Promise<Shopify.ICollect>;
-    list: (params?: any) => Promise<Shopify.ICollect[]>;
+    list: (params?: any) => Promise<Shopify.IPaginatedResult<Shopify.ICollect>>;
+  };
+  collection: {
+    get: (id: number, params?: any) => Promise<Shopify.ICollection>;
+    products: (
+      id: number,
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.IProduct>>;
   };
   collection: {
     get: (id: number, params?: any) => Promise<Shopify.ICollection>;
@@ -129,7 +158,9 @@ declare class Shopify {
   };
   collectionListing: {
     get: (id: number, params?: any) => Promise<Shopify.ICollectionListing>;
-    list: (params?: any) => Promise<Shopify.ICollectionListing[]>;
+    list: (
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.ICollectionListing>>;
     productIds: (id: number, params?: any) => Promise<any>;
   };
   comment: {
@@ -137,7 +168,7 @@ declare class Shopify {
     count: (params?: any) => Promise<number>;
     create: (params: Shopify.ICreateComment) => Promise<Shopify.IComment>;
     get: (id: number, params?: any) => Promise<Shopify.IComment>;
-    list: (params?: any) => Promise<Shopify.IComment[]>;
+    list: (params?: any) => Promise<Shopify.IPaginatedResult<Shopify.IComment>>;
     notSpam: (id: number) => Promise<Shopify.IComment>;
     remove: (id: number) => Promise<Shopify.IComment>;
     restore: (id: number) => Promise<Shopify.IComment>;
@@ -166,7 +197,9 @@ declare class Shopify {
     create: (params: any) => Promise<Shopify.ICustomCollection>;
     delete: (id: number) => Promise<void>;
     get: (id: number, params?: any) => Promise<Shopify.ICustomCollection>;
-    list: (params?: any) => Promise<Shopify.ICustomCollection[]>;
+    list: (
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.ICustomCollection>>;
     update: (id: number, params: any) => Promise<Shopify.ICustomCollection>;
   };
   customer: {
@@ -175,9 +208,18 @@ declare class Shopify {
     create: (params: any) => Promise<Shopify.ICustomer>;
     delete: (id: number) => Promise<void>;
     get: (id: number, params?: any) => Promise<Shopify.ICustomer>;
-    list: (params: any) => Promise<Shopify.ICustomer[]>;
-    search: (params: any) => Promise<any>;
+    list: (
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.ICustomer>>;
+    search: (
+      params: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.ICustomer>>;
+    sendInvite: (
+      id: number,
+      params?: Shopify.ICustomerSendInvite
+    ) => Promise<Shopify.ICustomerSendInvite>;
     update: (id: number, params: any) => Promise<Shopify.ICustomer>;
+    orders: (id: number, params?: any) => Promise<Shopify.IOrder[]>;
   };
   customerAddress: {
     create: (
@@ -193,7 +235,7 @@ declare class Shopify {
     list: (
       customerId: number,
       params?: any
-    ) => Promise<Shopify.ICustomerAddress[]>;
+    ) => Promise<Shopify.IPaginatedResult<Shopify.ICustomerAddress>>;
     set: (customerId: number, params: any) => Promise<any>;
     update: (
       customerId: number,
@@ -207,7 +249,9 @@ declare class Shopify {
     customers: (id: number, params?: any) => Promise<any>;
     delete: (id: number) => Promise<void>;
     get: (id: number, params?: any) => Promise<Shopify.ICustomerSavedSearch>;
-    list: (params?: any) => Promise<Shopify.ICustomerSavedSearch[]>;
+    list: (
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.ICustomerSavedSearch>>;
     update: (id: number, params: any) => Promise<Shopify.ICustomerSavedSearch>;
   };
   discountCode: {
@@ -220,7 +264,7 @@ declare class Shopify {
     list: (
       priceRuleId: number,
       params?: any
-    ) => Promise<Shopify.IDiscountCode[]>;
+    ) => Promise<Shopify.IPaginatedResult<Shopify.IDiscountCode>>;
     lookup: (params: any) => Promise<Shopify.IDiscountCode>;
     update: (
       priceRuleId: number,
@@ -241,7 +285,7 @@ declare class Shopify {
   };
   dispute: {
     get: (id: number) => Promise<Shopify.IDispute>;
-    list: (params?: any) => Promise<Shopify.IDispute[]>;
+    list: (params?: any) => Promise<Shopify.IPaginatedResult<Shopify.IDispute>>;
   };
   draftOrder: {
     complete: (id: number, params?: any) => Promise<Shopify.IDraftOrder>;
@@ -249,32 +293,39 @@ declare class Shopify {
     create: (params: any) => Promise<Shopify.IDraftOrder>;
     delete: (id: number) => Promise<void>;
     get: (id: number) => Promise<Shopify.IDraftOrder>;
-    list: (params?: any) => Promise<Shopify.IDraftOrder[]>;
+    list: (
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.IDraftOrder>>;
     sendInvoice: (id: number, params?: any) => Promise<any>;
     update: (id: number, params?: any) => Promise<Shopify.IDraftOrder>;
   };
   event: {
     count: (params?: any) => Promise<number>;
     get: (id: number, params?: any) => Promise<Shopify.IEvent>;
-    list: (params?: any) => Promise<Shopify.IEvent[]>;
+    list: (params?: any) => Promise<Shopify.IPaginatedResult<Shopify.IEvent>>;
   };
   fulfillment: {
     cancel: (orderId: number, id: number) => Promise<Shopify.IFulfillment>;
     complete: (orderId: number, id: number) => Promise<Shopify.IFulfillment>;
     count: (orderId: number, params?: any) => Promise<number>;
     create: (orderId: number, params: any) => Promise<Shopify.IFulfillment>;
+    createV2: (params: any) => Promise<Shopify.IFulfillment>;
     get: (
       orderId: number,
       id: number,
       params?: any
     ) => Promise<Shopify.IFulfillment>;
-    list: (orderId: number, params?: any) => Promise<Shopify.IFulfillment[]>;
+    list: (
+      orderId: number,
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.IFulfillment>>;
     open: (orderId: number, id: number) => Promise<Shopify.IFulfillment>;
     update: (
       orderId: number,
       id: number,
       params: any
     ) => Promise<Shopify.IFulfillment>;
+    updateTracking: (id: number, params: any) => Promise<Shopify.IFulfillment>;
   };
   fulfillmentEvent: {
     create: (
@@ -304,6 +355,34 @@ declare class Shopify {
       params: any
     ) => Promise<Shopify.IFulfillmentEvent>;
   };
+  fulfillmentOrder: {
+    cancel: (
+      id: number,
+      params: Shopify.IFulfillmentOrder
+    ) => Promise<Shopify.IFulfillmentOrder>;
+    close: (id: number, message?: string) => Promise<Shopify.IFulfillmentOrder>;
+    get: (id: number) => Promise<Shopify.IFulfillmentOrder>;
+    list: (params?: any) => Promise<Shopify.IFulfillmentOrder[]>;
+    locationsForMove: (id: number) => Promise<Shopify.ILocationForMove[]>;
+    move: (
+      id: number,
+      locationId: number
+    ) => Promise<Shopify.IFulfillmentOrder>;
+  };
+  fulfillmentRequest: {
+    accept: (
+      fulfillmentOrderId: number,
+      message?: string
+    ) => Promise<Shopify.IFulfillmentOrder>;
+    create: (
+      fulfillmentOrderId: number,
+      params: Shopify.ICreateFulfillmentRequest
+    ) => Promise<Shopify.IFulfillmentOrder>;
+    reject: (
+      fulfillmentOrderId: number,
+      message?: string
+    ) => Promise<Shopify.IFulfillmentOrder>;
+  };
   fulfillmentService: {
     create: (params: any) => Promise<Shopify.IFulfillmentService>;
     delete: (id: number) => Promise<void>;
@@ -316,8 +395,12 @@ declare class Shopify {
     create: (params: any) => Promise<Shopify.IGiftCard>;
     disable: (id: number) => Promise<any>;
     get: (id: number) => Promise<Shopify.IGiftCard>;
-    list: (params?: any) => Promise<Shopify.IGiftCard[]>;
-    search: (params: any) => Promise<any>;
+    list: (
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.IGiftCard>>;
+    search: (
+      params: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.IGiftCard>>;
     update: (id: number, params: any) => Promise<Shopify.IGiftCard>;
   };
   giftCardAdjustment: {
@@ -334,14 +417,18 @@ declare class Shopify {
   graphql: (data: string, variables?: any) => Promise<any>;
   inventoryItem: {
     get: (id: number) => Promise<Shopify.IInventoryItem>;
-    list: (params?: any) => Promise<Shopify.IInventoryItem[]>;
+    list: (
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.IInventoryItem>>;
     update: (id: number, params: any) => Promise<Shopify.IInventoryItem>;
   };
   inventoryLevel: {
     adjust: (params: any) => Promise<Shopify.IInventoryLevel>;
     connect: (params: any) => Promise<Shopify.IInventoryLevel>;
     delete: (params: any) => Promise<void>;
-    list: (params: any) => Promise<Shopify.IInventoryLevel[]>;
+    list: (
+      params: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.IInventoryLevel>>;
     set: (params: any) => Promise<Shopify.IInventoryLevel>;
   };
   location: {
@@ -351,14 +438,16 @@ declare class Shopify {
       id: number,
       params?: any
     ) => Promise<Shopify.IInventoryLevel[]>;
-    list: () => Promise<Shopify.ILocation[]>;
+    list: () => Promise<Shopify.IPaginatedResult<Shopify.ILocation>>;
   };
   marketingEvent: {
     count: (params?: any) => Promise<number>;
     create: (params: any) => Promise<Shopify.IMarketingEvent>;
     delete: (id: number) => Promise<void>;
     get: (id: number, params?: any) => Promise<Shopify.IMarketingEvent>;
-    list: (params?: any) => Promise<Shopify.IMarketingEvent[]>;
+    list: (
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.IMarketingEvent>>;
     update: (id: number, params: any) => Promise<Shopify.IMarketingEvent>;
     engagements: (id: number, params: any) => Promise<any>;
   };
@@ -367,18 +456,28 @@ declare class Shopify {
     create: (params: any) => Promise<Shopify.IMetafield>;
     delete: (id: number) => Promise<void>;
     get: (id: number, params?: any) => Promise<Shopify.IMetafield>;
-    list: (params?: any) => Promise<Shopify.IMetafield[]>;
+    list: (
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.IMetafield>>;
     update: (id: number, params: any) => Promise<Shopify.IMetafield>;
   };
-  on: (event: 'callLimits', callback: onCallLimitsFn) => Shopify;
+  on(
+    event: 'callLimits',
+    callback: (limits: Shopify.ICallLimits) => void
+  ): Shopify;
+  on(
+    event: 'callGraphqlLimits',
+    callback: (limits: Shopify.ICallGraphqlLimits) => void
+  ): Shopify;
   order: {
     cancel: (id: number, params?: any) => Promise<Shopify.IOrder>;
     close: (id: number) => Promise<Shopify.IOrder>;
     count: (params?: any) => Promise<number>;
     create: (params: any) => Promise<Shopify.IOrder>;
     delete: (id: number) => Promise<any>;
+    fulfillmentOrders: (id: number) => Promise<Shopify.IFulfillmentOrder[]>;
     get: (id: number, params?: any) => Promise<Shopify.IOrder>;
-    list: (params?: any) => Promise<Shopify.IOrder[]>;
+    list: (params?: any) => Promise<Shopify.IPaginatedResult<Shopify.IOrder>>;
     open: (id: number) => Promise<Shopify.IOrder>;
     update: (id: number, params: any) => Promise<Shopify.IOrder>;
   };
@@ -386,7 +485,9 @@ declare class Shopify {
     create: (orderId: number, params: any) => Promise<Shopify.IOrderRisk>;
     delete: (orderId: number, id: number) => Promise<void>;
     get: (orderId: number, id: number) => Promise<Shopify.IOrderRisk>;
-    list: (orderId: number) => Promise<Shopify.IOrderRisk[]>;
+    list: (
+      orderId: number
+    ) => Promise<Shopify.IPaginatedResult<Shopify.IOrderRisk>>;
     update: (
       orderId: number,
       id: number,
@@ -398,7 +499,7 @@ declare class Shopify {
     create: (params: any) => Promise<Shopify.IPage>;
     delete: (id: number) => Promise<void>;
     get: (id: number, params?: any) => Promise<Shopify.IPage>;
-    list: (params?: any) => Promise<Shopify.IPage[]>;
+    list: (params?: any) => Promise<Shopify.IPaginatedResult<Shopify.IPage>>;
     update: (id: number, params: any) => Promise<Shopify.IPage>;
   };
   payment: {
@@ -409,7 +510,7 @@ declare class Shopify {
   };
   payout: {
     get: (id: number) => Promise<Shopify.IPayout>;
-    list: (params?: any) => Promise<Shopify.IPayout[]>;
+    list: (params?: any) => Promise<Shopify.IPaginatedResult<Shopify.IPayout>>;
   };
   policy: {
     list: (params?: any) => Promise<Shopify.IPolicy[]>;
@@ -418,7 +519,9 @@ declare class Shopify {
     create: (params: any) => Promise<Shopify.IPriceRule>;
     delete: (id: number) => Promise<void>;
     get: (id: number, params?: any) => Promise<Shopify.IPriceRule>;
-    list: (params?: any) => Promise<Shopify.IPriceRule[]>;
+    list: (
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.IPriceRule>>;
     update: (id: number, params: any) => Promise<Shopify.IPriceRule>;
   };
   product: {
@@ -426,7 +529,7 @@ declare class Shopify {
     create: (params: any) => Promise<Shopify.IProduct>;
     delete: (id: number) => Promise<void>;
     get: (id: number, params?: any) => Promise<Shopify.IProduct>;
-    list: (params?: any) => Promise<Shopify.IProduct[]>;
+    list: (params?: any) => Promise<Shopify.IPaginatedResult<Shopify.IProduct>>;
     update: (id: number, params: any) => Promise<Shopify.IProduct>;
   };
   productImage: {
@@ -453,7 +556,9 @@ declare class Shopify {
     ) => Promise<Shopify.IProductListing>;
     delete: (productId: number) => Promise<void>;
     get: (productId: number) => Promise<Shopify.IProductListing>;
-    list: (params?: any) => Promise<Shopify.IProductListing[]>;
+    list: (
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.IProductListing>>;
     productIds: (params?: any) => Promise<any>;
   };
   productResourceFeedback: {
@@ -477,7 +582,7 @@ declare class Shopify {
     list: (
       productId: number,
       params?: any
-    ) => Promise<Shopify.IProductVariant[]>;
+    ) => Promise<Shopify.IPaginatedResult<Shopify.IProductVariant>>;
     update: (id: number, params: any) => Promise<Shopify.IProductVariant>;
   };
   province: {
@@ -518,7 +623,9 @@ declare class Shopify {
     create: (params: Shopify.ICreateRedirect) => Promise<Shopify.IRedirect>;
     delete: (id: number) => Promise<void>;
     get: (id: number, params?: any) => Promise<Shopify.IRedirect>;
-    list: (params?: any) => Promise<Shopify.IRedirect[]>;
+    list: (
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.IRedirect>>;
     update: (
       id: number,
       params: Shopify.IUpdateRedirect
@@ -532,13 +639,16 @@ declare class Shopify {
       id: number,
       params?: any
     ) => Promise<Shopify.IRefund>;
-    list: (orderId: number, params?: any) => Promise<Shopify.IRefund[]>;
+    list: (
+      orderId: number,
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.IRefund>>;
   };
   report: {
     create: (params: any) => Promise<Shopify.IReport>;
     delete: (id: number) => Promise<void>;
     get: (id: number, params?: any) => Promise<Shopify.IReport>;
-    list: (params?: any) => Promise<Shopify.IReport[]>;
+    list: (params?: any) => Promise<Shopify.IPaginatedResult<Shopify.IReport>>;
     update: (id: number, params: any) => Promise<Shopify.IReport>;
   };
   resourceFeedback: {
@@ -550,7 +660,9 @@ declare class Shopify {
     create: (params: Shopify.ICreateScriptTag) => Promise<Shopify.IScriptTag>;
     delete: (id: number) => Promise<void>;
     get: (id: number, params?: any) => Promise<Shopify.IScriptTag>;
-    list: (params?: any) => Promise<Shopify.IScriptTag[]>;
+    list: (
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.IScriptTag>>;
     update: (
       id: number,
       params: Shopify.IUpdateScriptTag
@@ -567,7 +679,9 @@ declare class Shopify {
     create: (params: any) => Promise<Shopify.ISmartCollection>;
     delete: (id: number) => Promise<void>;
     get: (id: number, params?: any) => Promise<Shopify.ISmartCollection>;
-    list: (params?: any) => Promise<Shopify.ISmartCollection[]>;
+    list: (
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.ISmartCollection>>;
     order: (id: number, params: any) => Promise<void>;
     products: (id: number, params: any) => Promise<Shopify.IProduct>;
     update: (id: number, params: any) => Promise<Shopify.ISmartCollection>;
@@ -578,7 +692,9 @@ declare class Shopify {
     list: () => Promise<Shopify.IStorefrontAccessToken[]>;
   };
   tenderTransaction: {
-    list: (params?: any) => Promise<Shopify.ITenderTransaction[]>;
+    list: (
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.ITenderTransaction>>;
   };
   theme: {
     create: (params: any) => Promise<Shopify.ITheme>;
@@ -595,7 +711,10 @@ declare class Shopify {
       id: number,
       params?: any
     ) => Promise<Shopify.ITransaction>;
-    list: (orderId: number, params?: any) => Promise<Shopify.ITransaction[]>;
+    list: (
+      orderId: number,
+      params?: any
+    ) => Promise<Shopify.IPaginatedResult<Shopify.ITransaction>>;
   };
   usageCharge: {
     create: (
@@ -615,14 +734,14 @@ declare class Shopify {
   user: {
     current: () => Promise<Shopify.IUser>;
     get: (id: number) => Promise<Shopify.IUser>;
-    list: () => Promise<Shopify.IUser[]>;
+    list: () => Promise<Shopify.IPaginatedResult<Shopify.IUser>>;
   };
   webhook: {
     count: (params?: any) => Promise<number>;
     create: (params: Shopify.ICreateWebhook) => Promise<Shopify.IWebhook>;
     delete: (id: number) => Promise<void>;
     get: (id: number, params?: any) => Promise<Shopify.IWebhook>;
-    list: (params?: any) => Promise<Shopify.IWebhook[]>;
+    list: (params?: any) => Promise<Shopify.IPaginatedResult<Shopify.IWebhook>>;
     update: (
       id: number,
       params: Shopify.IUpdateWebhook
@@ -665,13 +784,22 @@ declare namespace Shopify {
     max: number;
   }
 
+  export interface ICallGraphqlLimits {
+    actualQueryCost: number;
+    current: number;
+    max: number;
+    remaining: number;
+    requestedQueryCost: number;
+    restoreRate: number;
+  }
+
   interface IAccessScope {
     handle: string;
   }
 
   interface ICheckout {
     abandoned_checkout_url: string;
-    applied_discount?: ICheckoutDiscount[];
+    applied_discount?: ICheckoutDiscount;
     billing_address?: ICustomerAddress;
     buyer_accepts_marketing: boolean;
     cancel_reason?: 'customer' | 'fraud' | 'inventory' | 'other' | null;
@@ -728,7 +856,7 @@ declare namespace Shopify {
 
   interface ICheckoutLineItem {
     applied_discounts: any[];
-    compare_at_price: string;
+    compare_at_price: string | null;
     destination_location_id: number;
     discount_codes: any[];
     fulfillment_service: 'api' | 'custom' | 'legacy' | 'manual';
@@ -781,6 +909,13 @@ declare namespace Shopify {
     zone: string;
   }
 
+  type ApplicationChargeStatus =
+    | 'accepted'
+    | 'active'
+    | 'declined'
+    | 'expired'
+    | 'pending';
+
   interface IApplicationCharge {
     confirmation_url: string;
     created_at: string;
@@ -788,7 +923,7 @@ declare namespace Shopify {
     name: string;
     price: string;
     return_url: string;
-    status: 'accepted' | 'declined' | 'expired' | 'pending';
+    status: ApplicationChargeStatus;
     test: boolean | null;
     updated_at: string;
   }
@@ -797,7 +932,7 @@ declare namespace Shopify {
     name: string;
     price: string;
     return_url: string;
-    status: 'accepted' | 'declined' | 'expired' | 'pending';
+    status: ApplicationChargeStatus;
     test?: true;
   }
 
@@ -946,8 +1081,8 @@ declare namespace Shopify {
     net: string;
     source_id: number;
     source_type: BalanceTransactionSourceType;
-    source_order_transaction_id: number;
-    source_order_id: number;
+    source_order_transaction_id: number | null;
+    source_order_id: number | null;
     processed_at: string;
   }
 
@@ -1105,7 +1240,7 @@ declare namespace Shopify {
   }
 
   interface ICollectionListing {
-    collection_id: string;
+    collection_id: number;
     body_html: string;
     default_product_image: ICollectionListingImage;
     image: IImage;
@@ -1262,12 +1397,12 @@ declare namespace Shopify {
     first_name: string;
     id: number;
     last_name: string;
-    latitude: string;
-    longitude: string;
+    latitude: number | null;
+    longitude: number | null;
     name: string;
     phone: string | null;
-    province: string;
-    province_code: string;
+    province: string | null;
+    province_code: string | null;
     zip: string;
   }
 
@@ -1277,6 +1412,14 @@ declare namespace Shopify {
     name: string;
     query: string;
     updated_at: string;
+  }
+
+  interface ICustomerSendInvite {
+    to: string;
+    from: string;
+    bcc: string[];
+    subject: string;
+    custom_message: string;
   }
 
   type AllocationMethod = 'across' | 'each' | 'one';
@@ -1381,13 +1524,14 @@ declare namespace Shopify {
   type DraftOrderLineItemFulfullmentStatus = 'fulfilled' | 'partial';
 
   interface IDraftOrderLineItem {
-    applied_discounts: any[] | null;
+    applied_discount: IDraftOrderDiscount | null;
     discount_codes: any[];
     fulfillment_service: DraftOrderLineItemFulfullmentService;
     fulfillment_status?: DraftOrderLineItemFulfullmentStatus | null;
     gift_card: boolean;
     grams: number;
     key: string;
+    id: number;
     line_price: string;
     name: string;
     origin_location_id: number;
@@ -1406,12 +1550,12 @@ declare namespace Shopify {
   }
 
   interface IDraftOrder {
-    applied_discount: IDraftOrderDiscount[];
+    applied_discount: IDraftOrderDiscount | null;
     billing_address: ICustomerAddress;
     completed_at: string | null;
     created_at: string;
     currency: string;
-    customer: string;
+    customer: ICustomer | null;
     email: string;
     id: number;
     invoice_sent_at: string | null;
@@ -1550,6 +1694,116 @@ declare namespace Shopify {
     zip: string | null;
   }
 
+  interface IFulfillmentOrderDestination {
+    address1: string;
+    address2: string;
+    city: string;
+    company: string;
+    country: string;
+    email: string;
+    first_name: string;
+    id: number;
+    last_name: string;
+    phone: string;
+    province: string;
+    zip: string;
+  }
+
+  interface IFulfillmentOrderLineItem {
+    id: number;
+    shop_id: number;
+    fulfillment_order_id: number;
+    line_item_id: number;
+    inventory_item_id: number;
+    quantity: number;
+    fulfillable_quantity: number;
+    variant_id: number;
+  }
+
+  type FulfillmentOrderRequestStatus =
+    | 'accepted'
+    | 'cancellation_accepted'
+    | 'cancellation_rejected'
+    | 'cancellation_requested'
+    | 'closed'
+    | 'rejected'
+    | 'submitted'
+    | 'unsubmitted';
+
+  type FulfillmentOrderStatus =
+    | 'cancelled'
+    | 'closed'
+    | 'in_progress'
+    | 'incomplete'
+    | 'open';
+
+  type FulfillmentOrderSupportedAction =
+    | 'cancel_fulfillment_order'
+    | 'create_fulfillment'
+    | 'move'
+    | 'request_cancellation'
+    | 'request_fulfillment';
+
+  interface IFulfillmentOrderMerchantRequestRequestOptions {
+    date: string;
+    note: string;
+    shipping_method: string;
+  }
+
+  interface IFulfillmentOrderMerchantRequest {
+    kind: string;
+    message: string;
+    request_options: IFulfillmentOrderMerchantRequestRequestOptions;
+  }
+
+  interface IFulfillmentOrderAssignedLocation {
+    address1: string;
+    address2: string;
+    city: string;
+    country_code: string;
+    location_id: number;
+    name: string;
+    phone: string;
+    province: string;
+    zip: string;
+  }
+
+  interface IFulfillmentOrder {
+    assigned_location: IFulfillmentOrderAssignedLocation;
+    assigned_location_id: number;
+    destination: IFulfillmentOrderDestination;
+    id: number;
+    line_items: IFulfillmentOrderLineItem[];
+    merchant_requests: IFulfillmentOrderMerchantRequest[];
+    order_id: number;
+    fulfillment_service_handle: string;
+    request_status: FulfillmentOrderRequestStatus;
+    shop_id: number;
+    status: FulfillmentOrderStatus;
+    supported_actions: FulfillmentOrderSupportedAction[];
+  }
+
+  interface ILocationForMoveLocation {
+    id: number;
+    name: string;
+  }
+
+  interface ILocationForMove {
+    location: ILocationForMoveLocation;
+    movable: boolean;
+    message: string;
+  }
+
+  interface ICreateFulfillmentRequestFulfillmentOrderLineItem {
+    id: number;
+    quantity: number;
+  }
+
+  interface ICreateFulfillmentRequest {
+    message?: string;
+    fulfillment_order_line_items?: ICreateFulfillmentRequestFulfillmentOrderLineItem[];
+  }
+
   interface IFulfillmentService {
     callback_url: string;
     email: string | null;
@@ -1599,6 +1853,11 @@ declare namespace Shopify {
     processed_at: string;
   }
 
+  interface IInventoryItemCountryHarmonizedSystemCode {
+    harmonized_system_code: string;
+    country_code: string;
+  }
+
   interface IInventoryItem {
     id: number;
     sku: string;
@@ -1606,8 +1865,11 @@ declare namespace Shopify {
     created_at: string;
     updated_at: string;
     requires_shipping: boolean;
-    country_code_of_origin: string;
-    harmonized_system_code: string;
+    cost: string | null;
+    country_code_of_origin: string | null;
+    province_code_of_origin: string | null;
+    harmonized_system_code: string | null;
+    country_harmonized_system_codes: IInventoryItemCountryHarmonizedSystemCode[];
   }
 
   interface IInventoryLevel {
@@ -1631,41 +1893,14 @@ declare namespace Shopify {
   interface ILineItemDiscountAllocation {
     amount: string;
     discount_application_index: number;
+    amount_set: IMoneySet;
   }
 
   interface ILineItemTaxLine {
     title: string;
     price: string;
     rate: number;
-    price_set: IOrderAdjustmentAmountSet;
-  }
-
-  interface ILineItem {
-    discount_allocations: ILineItemDiscountAllocation[];
-    fulfillable_quantity: number;
-    fulfillment_service: string;
-    fulfillment_status: LineItemFulfillmentStatus;
-    gift_card: boolean;
-    grams: number;
-    id: number;
-    name: string;
-    price: string;
-    price_set: IOrderAdjustmentAmountSet;
-    product_id: number;
-    properties: ILineItemProperty[];
-    quantity: number;
-    require_shipping: boolean;
-    sku: string;
-    tax_lines: ILineItemTaxLine[];
-    taxable: boolean;
-    tip_payment_gateway: string;
-    tip_payment_method: string;
-    title: string;
-    total_discount: string;
-    total_discount_set: IOrderAdjustmentAmountSet;
-    variant_id: number;
-    variant_title: string;
-    vendor: string;
+    price_set: IMoneySet;
   }
 
   interface ILocation {
@@ -1745,7 +1980,25 @@ declare namespace Shopify {
     utm_source: string;
   }
 
-  type MetaFieldValueType = 'string' | 'integer';
+  type MetaFieldType =
+    | 'boolean'
+    | 'color'
+    | 'date'
+    | 'date_time'
+    | 'dimension'
+    | 'file_reference'
+    | 'json'
+    | 'multi_line_text_field'
+    | 'number_decimal'
+    | 'number_integer'
+    | 'page_reference'
+    | 'product_reference'
+    | 'rating'
+    | 'single_line_text_field'
+    | 'url'
+    | 'variant_reference'
+    | 'volume'
+    | 'weight';
 
   interface IMetafield {
     created_at: string;
@@ -1755,9 +2008,10 @@ declare namespace Shopify {
     namespace: string;
     owner_id: number;
     owner_resource: string;
-    value: string | number;
-    value_type: MetaFieldValueType;
+    type?: MetaFieldType;
     updated_at: string;
+    value: string | number;
+    value_type?: 'string' | 'integer' | 'json_string';
   }
 
   type OrderCancelReason =
@@ -1883,7 +2137,6 @@ declare namespace Shopify {
   interface IOrderTaxLine {
     title: string;
     price: string;
-    price_set: IOrderAdjustmentAmountSet;
     rate: number;
   }
 
@@ -1893,13 +2146,16 @@ declare namespace Shopify {
   }
 
   interface IOrderLineItem {
+    discount_allocations: ILineItemDiscountAllocation[];
     fulfillable_quantity: number;
     fulfillment_service: string;
-    fulfillment_status: OrderFulfillmentStatus;
+    fulfillment_status: LineItemFulfillmentStatus;
     grams: number;
     id: number;
+    pre_tax_price?: string;
+    pre_tax_price_set?: IMoneySet;
     price: string;
-    price_set: IOrderAdjustmentAmountSet;
+    price_set: IMoneySet;
     product_id: number | null;
     quantity: number;
     requires_shipping: boolean;
@@ -1912,9 +2168,11 @@ declare namespace Shopify {
     gift_card: boolean;
     properties: IOrderLineItemProperty[];
     taxable: boolean;
-    tax_lines: IOrderTaxLine[];
+    tax_lines: ILineItemTaxLine[];
+    tip_payment_gateway?: string;
+    tip_payment_method?: string;
     total_discount: string;
-    total_discount_set: IOrderAdjustmentAmountSet;
+    total_discount_set: IMoneySet;
   }
 
   interface IOrderShippingLineTaxLine {
@@ -1926,9 +2184,9 @@ declare namespace Shopify {
   interface IOrderShippingLine {
     code: string;
     discounted_price: string;
-    discounted_price_set: IOrderAdjustmentAmountSet;
+    discounted_price_set: IMoneySet;
     price: string;
-    price_set: IOrderAdjustmentAmountSet;
+    price_set: IMoneySet;
     source: string;
     title: string;
     tax_lines: IOrderShippingLineTaxLine[];
@@ -1957,6 +2215,15 @@ declare namespace Shopify {
     confirmed: boolean;
     created_at: string;
     currency: string;
+    current_subtotal_price: string;
+    current_subtotal_price_set: IMoneySet;
+    current_total_discounts: string;
+    current_total_discounts_set: IMoneySet;
+    current_total_duties_set: null | IMoneySet;
+    current_total_price: string;
+    current_total_price_set: IMoneySet;
+    current_total_tax: string;
+    current_total_tax_set: IMoneySet;
     customer?: IOrderCustomer;
     customer_locale: string;
     discount_applications: IDiscountApplication[];
@@ -1981,6 +2248,7 @@ declare namespace Shopify {
     phone: string;
     presentment_currency: string;
     processed_at: string;
+    checkout_id: number;
     processing_method: OrderProcessingMethod;
     referring_site: string;
     refunds: IRefund[];
@@ -1995,25 +2263,30 @@ declare namespace Shopify {
       | 'android'
       | string;
     subtotal_price: string;
-    subtotal_price_set: IOrderAdjustmentAmountSet;
+    subtotal_price_set: IMoneySet;
     tags: string;
     tax_lines: IOrderTaxLine[];
     taxes_included: boolean;
     test: boolean;
     token: string;
     total_discounts: string;
-    total_discounts_set: IOrderAdjustmentAmountSet;
+    total_discounts_set: IMoneySet;
     total_line_items_price: string;
-    total_line_items_price_set: IOrderAdjustmentAmountSet;
+    total_line_items_price_set: IMoneySet;
     total_price: string;
-    total_price_set: IOrderAdjustmentAmountSet;
-    total_shipping_price_set: IOrderAdjustmentAmountSet;
+    total_price_set: IMoneySet;
+    total_shipping_price_set: IMoneySet;
     total_tax: string;
-    total_tax_set: IOrderAdjustmentAmountSet;
+    total_tax_set: IMoneySet;
     total_tip_received: string;
     total_weight: number;
     updated_at: string;
     user_id: number | null;
+  }
+
+  interface IPaginatedResult<T> extends Array<T> {
+    nextPageParameters?: any;
+    previousPageParameters?: any;
   }
 
   type OrderRisksRecommendation = 'accept' | 'investigate' | 'cancel';
@@ -2051,6 +2324,18 @@ declare namespace Shopify {
     date: string;
     currency: string;
     amount: string;
+    summary: {
+      adjustments_fee_amount: string;
+      adjustments_gross_amount: string;
+      charges_fee_amount: string;
+      charges_gross_amount: string;
+      refunds_fee_amount: string;
+      refunds_gross_amount: string;
+      reserved_funds_fee_amount: string;
+      reserved_funds_gross_amount: string;
+      retried_payouts_fee_amount: string;
+      retried_payouts_gross_amount: string;
+    };
   }
 
   interface IPolicy {
@@ -2062,7 +2347,20 @@ declare namespace Shopify {
   }
 
   interface IPriceRulePrerequisiteSubtotalRange {
-    prerequisite_subtotal_range: string;
+    greater_than_or_equal_to: string;
+  }
+
+  interface IPriceRulePrerequisiteQuantityRange {
+    greater_than_or_equal_to: string;
+  }
+
+  interface IPriceRulePrerequisiteToEntitlementQuantityRange {
+    prerequisite_quantity: number | null;
+    entitled_quantity: number | null;
+  }
+
+  interface IPriceRulePrerequisiteShippingPriceRange {
+    less_than_or_equal_to: string;
   }
 
   type PriceRuleTargetType = 'line_item' | 'shipping_line';
@@ -2072,7 +2370,6 @@ declare namespace Shopify {
   type PriceRuleCustomerSelection = 'all' | 'prerequisite';
 
   interface IPriceRule {
-    created_at: string;
     id: number;
     title: string;
     target_type: PriceRuleTargetType;
@@ -2082,16 +2379,26 @@ declare namespace Shopify {
     value: string;
     once_per_customer: boolean;
     usage_limit: number | null;
+    allocation_limit: number | null;
     customer_selection: PriceRuleCustomerSelection;
     prerequisite_saved_search_ids: number[];
     prerequisite_subtotal_range: IPriceRulePrerequisiteSubtotalRange | null;
-    prerequisite_shipping_price_range: string;
+    prerequisite_shipping_price_range: IPriceRulePrerequisiteShippingPriceRange | null;
+    prerequisite_quantity_range: IPriceRulePrerequisiteQuantityRange | null;
+    prerequisite_to_entitlement_quantity_ratio: IPriceRulePrerequisiteToEntitlementQuantityRange | null;
+    prerequisite_product_ids: number[];
+    prerequisite_variant_ids: number[];
+    prerequisite_collection_ids: number[];
+    prerequisite_customer_ids: number[];
     entitled_product_ids: number[];
     entitled_variant_ids: number[];
     entitled_collection_ids: number[];
     entitled_country_ids: number[];
+    created_at: string;
+    updated_at: string;
     starts_at: string;
     ends_at: string;
+    admin_graphql_api_id: string;
   }
 
   interface IProductOption {
@@ -2121,6 +2428,7 @@ declare namespace Shopify {
     updated_at: string;
     variants: IProductVariant[];
     vendor: string;
+    status: 'active' | 'archived' | 'draft';
   }
 
   interface IProductImage {
@@ -2141,7 +2449,7 @@ declare namespace Shopify {
 
   interface IProductVariant {
     barcode: string;
-    compare_at_price: string;
+    compare_at_price: string | null;
     created_at: string;
     fulfillment_service: string;
     grams: number;
@@ -2176,8 +2484,8 @@ declare namespace Shopify {
   }
 
   interface IProductVariantPresentmentPriceSet {
-    price: IOrderAdjustmentMoney;
-    compare_at_price: IOrderAdjustmentMoney;
+    price: IMoney;
+    compare_at_price: IMoney;
   }
 
   interface IProductListingVariant extends IProductVariant {
@@ -2269,25 +2577,25 @@ declare namespace Shopify {
 
   interface IRefundLineItem {
     id: number;
-    line_item: ILineItem;
+    line_item: IOrderLineItem;
     line_item_id: number;
     quantity: number;
     restock_type: 'no_restock' | 'cancel' | 'return' | 'legacy_restock';
     location_id: number;
     subtotal: string;
     total_tax: string;
-    subtotal_set: IOrderAdjustmentAmountSet;
-    total_tax_set: IOrderAdjustmentAmountSet;
+    subtotal_set: IMoneySet;
+    total_tax_set: IMoneySet;
   }
 
-  interface IOrderAdjustmentMoney {
+  interface IMoney {
     amount: number | string;
     currency_code: string;
   }
 
-  interface IOrderAdjustmentAmountSet {
-    shop_money: IOrderAdjustmentMoney;
-    presentment_money: IOrderAdjustmentMoney;
+  interface IMoneySet {
+    shop_money: IMoney;
+    presentment_money: IMoney;
   }
 
   interface IOrderAdjustment {
@@ -2298,8 +2606,8 @@ declare namespace Shopify {
     tax_amount: string;
     kind: string;
     reason: string;
-    amount_set: IOrderAdjustmentAmountSet;
-    tax_amount_set: IOrderAdjustmentAmountSet;
+    amount_set: IMoneySet;
+    tax_amount_set: IMoneySet;
   }
 
   interface IRefund {
@@ -2345,6 +2653,7 @@ declare namespace Shopify {
     id: number;
     src: string;
     display_scope: ScriptTagDisplayScope;
+    cache: boolean;
     updated_at: string;
   }
 
@@ -2352,12 +2661,14 @@ declare namespace Shopify {
     event: ScriptTagEvent;
     src: string;
     display_scope?: ScriptTagDisplayScope;
+    cache?: boolean;
   }
 
   interface IUpdateScriptTag {
     event: ScriptTagEvent;
     src: string;
     display_scope?: ScriptTagDisplayScope;
+    cache?: boolean;
   }
 
   interface ICarrierShippingRateProvider {
@@ -2397,6 +2708,7 @@ declare namespace Shopify {
     tax_percentage: number;
     tax_type: any | null;
     shipping_zone_id: number;
+    provinces: IProvince[];
   }
 
   interface IShippingZone {
@@ -2593,14 +2905,6 @@ declare namespace Shopify {
   type TransactionSourceName = 'android' | 'iphone' | 'pos' | 'web';
   type TransactionStatus = 'error' | 'failure' | 'pending' | 'success';
 
-  interface ITRansactionReceipt {
-    testcase: boolean;
-    authorization: string;
-    balance_transaction?: {
-      [k: string]: any;
-    };
-  }
-
   interface ITransaction {
     amount: string;
     authorization: string;
@@ -2618,7 +2922,7 @@ declare namespace Shopify {
     payment_details: IPaymentDetails;
     parent_id: number;
     processed_at: string;
-    receipt: ITRansactionReceipt;
+    receipt: Record<string, any>;
     source_name: TransactionSourceName;
     status: TransactionStatus;
     test: boolean;
@@ -2694,6 +2998,7 @@ declare namespace Shopify {
 
   export type WebhookTopic =
     | 'app/uninstalled'
+    | 'bulk_operations/finish'
     | 'carts/create'
     | 'carts/update'
     | 'checkouts/create'
@@ -2713,6 +3018,7 @@ declare namespace Shopify {
     | 'customers/disable'
     | 'customers/enable'
     | 'customers/update'
+    | 'customers_marketing_consent/update'
     | 'draft_orders/create'
     | 'draft_orders/delete'
     | 'draft_orders/update'
@@ -2721,22 +3027,26 @@ declare namespace Shopify {
     | 'fulfillments/create'
     | 'fulfillments/update'
     | 'inventory_items/create'
-    | 'inventory_items/update'
     | 'inventory_items/delete'
+    | 'inventory_items/update'
     | 'inventory_levels/connect'
-    | 'inventory_levels/update'
     | 'inventory_levels/disconnect'
+    | 'inventory_levels/update'
     | 'locations/create'
-    | 'locations/update'
     | 'locations/delete'
+    | 'locations/update'
     | 'order_transactions/create'
     | 'orders/cancelled'
     | 'orders/create'
     | 'orders/delete'
+    | 'orders/edited'
     | 'orders/fulfilled'
     | 'orders/paid'
     | 'orders/partially_fulfilled'
     | 'orders/updated'
+    | 'payment_terms/create'
+    | 'payment_terms/delete'
+    | 'payment_terms/update'
     | 'product_listings/add'
     | 'product_listings/remove'
     | 'product_listings/update'
@@ -2744,7 +3054,14 @@ declare namespace Shopify {
     | 'products/delete'
     | 'products/update'
     | 'refunds/create'
+    | 'selling_plan_groups/create'
+    | 'selling_plan_groups/delete'
+    | 'selling_plan_groups/update'
     | 'shop/update'
+    | 'subscription_billing_attempts/challenged'
+    | 'subscription_billing_attempts/failure'
+    | 'subscription_billing_attempts/success'
+    | 'tender_transactions/create'
     | 'themes/create'
     | 'themes/delete'
     | 'themes/publish'
@@ -2919,7 +3236,9 @@ declare namespace Shopify {
     requires_shipping: boolean;
     taxable: boolean;
     fulfillment_service?: string;
-    properties?: ILineItemProperty;
+    properties?: {
+      [key: string]: string;
+    };
     product_id: number;
     variant_id: number;
   }

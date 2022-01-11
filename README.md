@@ -1,11 +1,10 @@
-# Shopify API Node.js (Official module)
+# Shopify API Node.js
 
 [![Version npm][npm-shopify-api-node-badge]][npm-shopify-api-node]
-[![Build Status][travis-shopify-api-node-badge]][travis-shopify-api-node]
-[![Dependencies][david-shopify-api-node-badge]][david-shopify-api-node]
+[![Build Status][ci-shopify-api-node-badge]][ci-shopify-api-node]
 [![Coverage Status][coverage-shopify-api-node-badge]][coverage-shopify-api-node]
 
-Official Shopify API bindings for Node.js.
+Shopify API bindings for Node.js.
 
 ## Installation:
 
@@ -54,8 +53,16 @@ Creates a new `Shopify` instance.
   specifies a limit of 2 requests per second with a burst of 35 requests. When
   set to `true` requests are limited as specified in the above example. Defaults
   to `false`.
+- `parseJson` - Optional - The function used to parse JSON. The function is
+  passed a single argument. This option allows the use of a custom JSON parser
+  that might be needed to properly handle long integer IDs. Defaults to
+  `JSON.parse()`.
 - `presentmentPrices` - Optional - Whether to include the header to pull
   presentment prices for products. Defaults to `false`.
+- `stringifyJson` - Optional - The function used to serialize to JSON. The
+  function is passed a single argument. This option allows the use of a custom
+  JSON serializer that might be needed to properly handle long integer IDs.
+  Defaults to `JSON.stringify()`.
 - `timeout` - Optional - The number of milliseconds before the request times
   out. If the request takes longer than `timeout`, it will be aborted. Defaults
   to `60000`, or 1 minute.
@@ -247,6 +254,8 @@ Each set of results may have the `nextPageParameters` and
 `previousPageParameters` properties. These properties specify respectively the
 parameters needed to fetch the next and previous page of results.
 
+This feature is only available on version 2.24.0 and above.
+
 ## Available resources and methods
 
 - accessScope
@@ -287,6 +296,10 @@ parameters needed to fetch the next and previous page of results.
   - `get(id[, params])`
   - `list([params])`
   - `update(id, params)`
+- cancellationRequest
+  - `accept(fulfillmentOrderId[, message])`
+  - `create(fulfillmentOrderId[, message])`
+  - `reject(fulfillmentOrderId[, message])`
 - carrierService
   - `create(params)`
   - `delete(id)`
@@ -307,6 +320,9 @@ parameters needed to fetch the next and previous page of results.
   - `delete(id)`
   - `get(id[, params])`
   - `list([params])`
+- collection
+  - `get(id[, params])`
+  - `products(id[, params])`
 - collectionListing
   - `get(id)`
   - `list([params])`
@@ -345,7 +361,7 @@ parameters needed to fetch the next and previous page of results.
   - `delete(id)`
   - `get(id[, params])`
   - `list([params])`
-  - `orders(id)`
+  - `orders(id[, params])`
   - `search(params)`
   - `sendInvite(id[, params])`
   - `update(id, params)`
@@ -397,16 +413,29 @@ parameters needed to fetch the next and previous page of results.
   - `complete(orderId, id)`
   - `count(orderId[, params)`
   - `create(orderId, params)`
+  - `createV2(params)`
   - `get(orderId, id[, params])`
   - `list(orderId[, params])`
   - `open(orderId, id)`
   - `update(orderId, id, params)`
+  - `updateTracking(id, params)`
 - fulfillmentEvent
   - `create(orderId, fulfillmentId, params)`
   - `delete(orderId, fulfillmentId, id)`
   - `get(orderId, fulfillmentId, id)`
   - `list(orderId, fulfillmentId[, params])`
   - `update(orderId, fulfillmentId, id, params)`
+- fulfillmentOrder
+  - `cancel(id, params)`
+  - `close(id[, message])`
+  - `get(id)`
+  - `list([params])`
+  - `locationsForMove(id)`
+  - `move(id, locationId)`
+- fulfillmentRequest
+  - `accept(fulfillmentOrderId[, message])`
+  - `create(fulfillmentOrderId, params)`
+  - `reject(fulfillmentOrderId[, message])`
 - fulfillmentService
   - `create(params)`
   - `delete(id)`
@@ -461,6 +490,7 @@ parameters needed to fetch the next and previous page of results.
   - `count([params])`
   - `create(params)`
   - `delete(id)`
+  - `fulfillmentOrders(id)`
   - `get(id[, params])`
   - `list([params])`
   - `open(id)`
@@ -665,6 +695,7 @@ shopify
 - [Youtube Traffic][youtube-traffic]
 - [Shipatron][shipatron]
 - [UPC Code Manager][upc-code-manager]
+- [Shopify Passwordless Login][dimension-software]
 
 ## Supported by:
 
@@ -680,12 +711,10 @@ Used in our live products: [MoonMail][moonmail] & [MONEI][monei]
   https://github.com/Shopify/shopify-node-app
 [npm-shopify-api-node-badge]: https://img.shields.io/npm/v/shopify-api-node.svg
 [npm-shopify-api-node]: https://www.npmjs.com/package/shopify-api-node
-[travis-shopify-api-node-badge]:
-  https://img.shields.io/travis/MONEI/Shopify-api-node/master.svg
-[travis-shopify-api-node]: https://travis-ci.org/MONEI/Shopify-api-node
-[david-shopify-api-node-badge]:
-  https://img.shields.io/david/MONEI/Shopify-api-node.svg
-[david-shopify-api-node]: https://david-dm.org/MONEI/Shopify-api-node
+[ci-shopify-api-node-badge]:
+  https://img.shields.io/github/workflow/status/MONEI/Shopify-api-node/CI/master?label=CI
+[ci-shopify-api-node]:
+  https://github.com/MONEI/Shopify-api-node/actions?query=workflow%3ACI+branch%3Amaster
 [coverage-shopify-api-node-badge]:
   https://img.shields.io/coveralls/MONEI/Shopify-api-node/master.svg
 [coverage-shopify-api-node]: https://coveralls.io/github/MONEI/Shopify-api-node
@@ -719,3 +748,4 @@ Used in our live products: [MoonMail][moonmail] & [MONEI][monei]
 [youtube-traffic]: https://apps.shopify.com/youtube-traffic?ref=microapps
 [shipatron]: https://shipatron.io
 [upc-code-manager]: https://apps.shopify.com/upc-code-manager-1
+[dimension-software]: https://login.dimensionsoftware.com
