@@ -152,10 +152,6 @@ declare class Shopify {
       params?: any
     ) => Promise<Shopify.IPaginatedResult<Shopify.IProduct>>;
   };
-  collection: {
-    get: (id: number, params?: any) => Promise<Shopify.ICollection>;
-    products: (id: number, params?: any) => Promise<Shopify.IProduct[]>;
-  };
   collectionListing: {
     get: (id: number, params?: any) => Promise<Shopify.ICollectionListing>;
     list: (
